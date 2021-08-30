@@ -6,7 +6,7 @@ Android library which handles custom animation on indicator of PageSlider
 
 # Source
 
-The code in this repository was inspired from https://github.com/Ulez/DropIndicator. We are very
+The code in this repository was inspired from [Ulez/DropIndicator](https://github.com/Ulez/DropIndicator). We are very
  thankful to Ulez.
 
 # Demo
