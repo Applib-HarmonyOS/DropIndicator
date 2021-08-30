@@ -1,0 +1,28 @@
+{
+  "app": {
+    "bundleName": "comulez.github.dropindicator",
+    "vendor": "github",
+    "version": {
+      "code": 1000000,
+      "name": "1.0.0"
+    },
+    "apiVersion": {
+      "compatible": 5,
+      "target": 5,
+      "releaseType": "Beta1"
+    }
+  },
+  "deviceConfig": {
+  },
+  "module": {
+    "package": "comulez.github.droplibrary",
+    "deviceType": [
+      "phone"
+    ],
+    "distro": {
+      "deliveryWithInstall": true,
+      "moduleName": "dropindicator",
+      "moduleType": "har"
+    }
+  }
+}

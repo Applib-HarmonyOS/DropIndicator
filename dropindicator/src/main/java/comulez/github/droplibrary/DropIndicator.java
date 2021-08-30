@@ -1,584 +1,789 @@
 package comulez.github.droplibrary;
 
-import android.animation.Animator;
-import android.animation.ValueAnimator;
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.PointF;
-import android.support.v4.view.ViewPager;
-import android.util.AttributeSet;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
+import static ohos.agp.render.BlendMode.LIGHTEN;
+import static ohos.multimodalinput.event.TouchEvent.PRIMARY_POINT_DOWN;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import ohos.agp.animation.Animator;
+import ohos.agp.animation.AnimatorValue;
+import ohos.agp.colors.RgbPalette;
+import ohos.agp.components.AttrSet;
+import ohos.agp.components.Component;
+import ohos.agp.components.ComponentContainer;
+import ohos.agp.components.PageSlider;
+import ohos.agp.render.Canvas;
+import ohos.agp.render.Paint;
+import ohos.agp.render.Path;
+import ohos.agp.utils.Color;
+import ohos.app.Context;
+import ohos.hiviewdfx.HiLog;
+import ohos.hiviewdfx.HiLogLabel;
+import ohos.multimodalinput.event.TouchEvent;
 
 /**
  * Created by Ulez on 2016/11/24.
- * Email：lcy1532110757@gmail.com
+ * Email：lcy1532110757@gmail.com.
+ * Class handling the feature of adding drops and thier animation.
  */
-public class DropIndicator extends ViewGroup {
-    private int circleColor;
-    private int clickColor;
-    private Paint mClickPaint;
-    private int duration;
-    private Paint mPaintCircle;
-    private Paint mPaint;
-    private Path mPath = new Path();
-    private float ratio = 50;
-    private final double c = 0.552284749831;
-    private final int r = 1;
-    private int mWidth;
-    private int mHeight;
-    private float startX;
-    private int startY;
-    private float totalOff;
-    private float distance;
-    private int currOff;
-    private float mCurrentTime;
-    private int tabNum = 0;
-    private XPoint p2, p4;
-    private YPoint p1, p3;
-    private float mc;
-    private float radius;
-    private int[] roundColors = new int[4];
-    private float div;
-    private float scale = 0.8f;
+public class DropIndicator extends ComponentContainer
+        implements Component.DrawTask, Component.EstimateSizeListener,
+        Component.TouchEventListener, Component.LayoutRefreshedListener {
 
-    private int currentPos = 0;
-    private int toPos = -1;
-    private ViewPager mViewPager;
-    private ViewPager.OnPageChangeListener onPageChangeListener;
-    private int viewPagerState;
-    public static final int SCROLL_STATE_IDLE = 0;
-    public static final int SCROLL_STATE_DRAGGING = 1;
-    public static final int SCROLL_STATE_SETTLING = 2;
-    private String TAG = "DropIndicator";
-    private boolean animating;
+  private static final float DEFRADIUS = 42f;
+  private static final int DEFDURATION = 1000;
+  private static final float DEFSCALE = 0.8f;
+  private static final double CONST = 0.552284749831;
+  private static final double GCONST = 1.41421;
+  private static final int RCONST = 1;
+  private boolean direction = true;
+  private float lastCurrentTime = 0;
+  private Color[] roundColors = new Color[4];
+  private Color startColor;
+  private Color endColor;
+  private float radius;
+  private float mcConst;
+  private int duration;
+  private float scale;
+  private Paint clickPaint;
+  private Paint paintCircle;
+  private Paint mpaint;
+  private float ratio = 50;
+  private PageSlider.PageChangedListener pgChangedListener;
+  private float startX;
+  private int startY;
+  private boolean needInit = false;
+  private AnimatorValue animator;
+  private PageSlider mviewPager;
+  private boolean animating;
+  private float currentTime;
+  private int tabNum = 0;
+  private Xpoint pt2;
+  private Xpoint pt4;
+  private Ypoint pt1;
+  private Ypoint pt3;
+  private float div;
+  private float distance;
+  private int currentPos = 0;
+  private int toPos = -1;
+  private Path mpath = new Path();
+  private boolean isSwipe = false;
+  private float[][] colourHolder;
+  private float[] result;
+  public static final HiLogLabel LABEL_LOG = new HiLogLabel(3, 0xD001100, "LIBTEST");
+  private static final Logger LOGGER = Logger.getLogger("java.util.logger");
 
-    public DropIndicator(Context context) {
-        this(context, null);
+  public DropIndicator(final Context context) {
+    super(context);
+  }
+
+  public DropIndicator(final Context context, final AttrSet attrSet) {
+    this(context, attrSet, null);
+  }
+
+  /** A constructor to initialize default values.
+   *
+   * @param context app context
+   * @param attrSet xml attributes
+   * @param styleName style
+   */
+  public DropIndicator(final Context context, final AttrSet attrSet, final String styleName) {
+    super(context, attrSet, styleName);
+    final int defaultColor1 = RgbPalette.parse("#FCC04D");
+    roundColors[0] = new Color(defaultColor1);
+    final int defaultColor2 = RgbPalette.parse("#00C3E2");
+    roundColors[1] = new Color(defaultColor2);
+    final int defaultColor3 = RgbPalette.parse("#FE626D");
+    roundColors[2] = new Color(defaultColor3);
+    final int defaultColor4 = RgbPalette.parse("#966ACF");
+    roundColors[3] = new Color(defaultColor4);
+    Color clickColor = Color.WHITE;
+    Color circleColor = Color.GRAY;
+    radius = DEFRADIUS;
+    duration = DEFDURATION;
+    scale = DEFSCALE;
+
+    final String dpColor1 = "color1";
+    if (attrSet.getAttr(dpColor1).isPresent()) {
+      roundColors[0] = attrSet.getAttr(dpColor1).get().getColorValue();
     }
-
-    public DropIndicator(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+    final String dpColor2 = "color2";
+    if (attrSet.getAttr(dpColor2).isPresent()) {
+      roundColors[1] = attrSet.getAttr(dpColor2).get().getColorValue();
     }
-
-    public DropIndicator(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.DropIndicator);
-        roundColors[0] = typedArray.getColor(R.styleable.DropIndicator_color1, Color.parseColor("#B04285F4"));
-        roundColors[1] = typedArray.getColor(R.styleable.DropIndicator_color2, Color.parseColor("#B0EA4335"));
-        roundColors[2] = typedArray.getColor(R.styleable.DropIndicator_color3, Color.parseColor("#B0FBBC05"));
-        roundColors[3] = typedArray.getColor(R.styleable.DropIndicator_color4, Color.parseColor("#B034A853"));
-        clickColor = typedArray.getColor(R.styleable.DropIndicator_click_color, Color.WHITE);
-        circleColor = typedArray.getColor(R.styleable.DropIndicator_circle_color, Color.GRAY);
-        radius = typedArray.getDimension(R.styleable.DropIndicator_radius, 50);
-        duration = typedArray.getInteger(R.styleable.DropIndicator_duration, 1000);
-        scale = typedArray.getFloat(R.styleable.DropIndicator_scale, 0.8f);
-        typedArray.recycle();
-        f = new float[roundColors.length][3];
-        result = new float[3];
-        ratio = radius;
-        mc = (float) (c * ratio);
-        mPaintCircle = new Paint();
-        mPaintCircle.setColor(circleColor);
-        mPaintCircle.setStyle(Paint.Style.STROKE);
-        mPaintCircle.setAntiAlias(true);
-        mPaintCircle.setStrokeWidth(3);
-
-        mClickPaint = new Paint();
-        mClickPaint.setColor(clickColor);
-        mClickPaint.setStyle(Paint.Style.STROKE);
-        mClickPaint.setAntiAlias(true);
-        mClickPaint.setStrokeWidth(radius / 2);
-
-        mPaint = new Paint();
-        startColor = roundColors[0];
-        mPaint.setColor(startColor);
-        mPaint.setStyle(Paint.Style.FILL);
-        mPaint.setStrokeWidth(1);
-        mPaint.setAntiAlias(true);
+    final String dpColor3 = "color3";
+    if (attrSet.getAttr(dpColor3).isPresent()) {
+      roundColors[2] = attrSet.getAttr(dpColor3).get().getColorValue();
     }
-
-
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        mWidth = w;
-        mHeight = h;
-        div = (mWidth - 2 * tabNum * radius) / (tabNum + 1);
-        startX = div + radius;
-        startY = mHeight / 2;
-        totalOff = (tabNum - 1) * (2 * radius + div) - radius;
-
-        if (currentPos == 0) {
-            radius = r * ratio;
-            mc = (float) (c * ratio);
-            p1 = new YPoint(0, radius, mc);
-            p3 = new YPoint(0, -radius, mc);
-            p2 = new XPoint(radius, 0, mc);
-            p4 = new XPoint(-radius, 0, mc);
-        }
-        super.onSizeChanged(w, h, oldw, oldh);
+    final String dpColor4 = "color4";
+    if (attrSet.getAttr(dpColor4).isPresent()) {
+      roundColors[3] = attrSet.getAttr(dpColor4).get().getColorValue();
     }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        float x = event.getX();
-        if (x > div + 2 * radius && x < (div + 2 * radius) * tabNum) {
-            if (animator != null)
-                animator.cancel();
-            int toPos = (int) (x / (div + 2 * radius));
-            if (toPos != currentPos && toPos <= tabNum)
-                startAniTo(currentPos, toPos);
-        } else if (x > div && x < div + 2 * radius) {
-            if (animator != null)
-                animator.cancel();
-            if (currentPos != 0)
-                startAniTo(currentPos, 0);
-        }
-        return super.onTouchEvent(event);
+    final String dpClickColor = "click_color";
+    if (attrSet.getAttr(dpClickColor).isPresent()) {
+      clickColor = attrSet.getAttr(dpClickColor).get().getColorValue();
     }
-
-
-    ValueAnimator animator;
-
-    private boolean startAniTo(int currentPos, int toPos) {
-        this.currentPos = currentPos;
-        this.toPos = toPos;
-        if (currentPos == toPos)
-            return true;
-        startColor = roundColors[(this.currentPos) % 4];
-        endColor = roundColors[(toPos) % 4];
-        resetP();
-
-
-        startX = div + radius + (this.currentPos) * (div + 2 * radius);
-        distance = (toPos - this.currentPos) * (2 * radius + div) + (toPos > currentPos ? -radius : radius);
-
-        if (animator == null) {
-            animator = ValueAnimator.ofFloat(0, 1.0f);
-            animator.setDuration(duration);
-            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                @Override
-                public void onAnimationUpdate(ValueAnimator animation) {
-                    mCurrentTime = (float) animation.getAnimatedValue();
-                    invalidate();
-                }
-            });
-            animator.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animation) {
-                    animating = true;
-                    setTouchAble(!animating);
-                }
-
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    goo();
-                    animating = false;
-                    setTouchAble(!animating);
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                    goo();
-                    animating = false;
-                    setTouchAble(!animating);
-                    mCurrentTime=1;
-                    invalidate();
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-
-                }
-            });
-        }
-        animator.start();
-        if (mViewPager != null) {
-            mViewPager.setCurrentItem(toPos);
-        }
-
-        return true;
+    final String dpCircleColor = "circle_color";
+    if (attrSet.getAttr(dpCircleColor).isPresent()) {
+      circleColor = attrSet.getAttr(dpCircleColor).get().getColorValue();
     }
-
-    private void setTouchAble(boolean touchAble) {
-        if (mViewPager instanceof Touchable)
-            ((Touchable) mViewPager).setTouchable(touchAble);
+    final String dpRadius = "radius";
+    if (attrSet.getAttr(dpRadius).isPresent()) {
+      radius = attrSet.getAttr(dpRadius).get().getDimensionValue();
     }
-
-    private void resetP() {
-        p1.setY(radius);
-        p1.setX(0);
-        p1.setMc(mc);
-
-        p3.setY(-radius);
-        p3.setX(0);
-        p3.setMc(mc);
-
-        p2.setY(0);
-        p2.setX(radius);
-        p2.setMc(mc);
-
-        p4.setY(0);
-        p4.setX(-radius);
-        p4.setMc(mc);
+    final String dpDuration = "duration";
+    if (attrSet.getAttr(dpDuration).isPresent()) {
+      duration = attrSet.getAttr(dpDuration).get().getIntegerValue();
     }
-
-    private void goo() {
-        currentPos = toPos;
+    final String dpScale = "scale";
+    if (attrSet.getAttr(dpScale).isPresent()) {
+      scale = attrSet.getAttr(dpScale).get().getFloatValue();
     }
+    colourHolder = new float[roundColors.length][3];
+    result = new float[3];
+    ratio = radius;
+    mcConst = (float) (CONST * ratio);
 
-    private int startColor;
-    private int endColor;
-    boolean direction = true;
+    paintCircle = new Paint();
+    paintCircle.setColor(circleColor);
+    paintCircle.setStyle(Paint.Style.STROKE_STYLE);
+    paintCircle.setAntiAlias(true);
+    paintCircle.setStrokeWidth(3);
 
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        canvas.save();
-        mPath.reset();
-        tabNum = getChildCount();
-        for (int i = 0; i < tabNum; i++) {
-            canvas.drawCircle(div + radius + i * (div + 2 * radius), startY, radius, mPaintCircle);
-        }
-        if (mCurrentTime == 0) {
-            resetP();
-            canvas.drawCircle(div + radius + (currentPos) * (div + 2 * radius), startY, 0, mClickPaint);
-            mPaint.setColor(startColor);
-            canvas.translate(startX, startY);
-            if (toPos > currentPos) {
-                p2.setX(radius);
-            } else {
-                p4.setX(-radius);
-            }
-        }
-        if (mCurrentTime > 0 && mCurrentTime <= 0.2) {
-            direction = toPos > currentPos ? true : false;
-            if (animating)
-                canvas.drawCircle(div + radius + (toPos) * (div + 2 * radius), startY, radius * 1.0f * 5 * mCurrentTime, mClickPaint);
-            canvas.translate(startX, startY);
-            if (toPos > currentPos) {
-                p2.setX(radius + 2 * 5 * mCurrentTime * radius / 2);
-            } else {
-                p4.setX(-radius - 2 * 5 * mCurrentTime * radius / 2);
-            }
-        } else if (mCurrentTime > 0.2 && mCurrentTime <= 0.5) {
-            canvas.translate(startX + (mCurrentTime - 0.2f) * distance / 0.7f, startY);
-            if (toPos > currentPos) {
-                p2.setX(2 * radius);
-                p1.setX(0.5f * radius * (mCurrentTime - 0.2f) / 0.3f);
-                p3.setX(0.5f * radius * (mCurrentTime - 0.2f) / 0.3f);
-                p2.setMc(mc + (mCurrentTime - 0.2f) * mc / 4 / 0.3f);
-                p4.setMc(mc + (mCurrentTime - 0.2f) * mc / 4 / 0.3f);
-            } else {
-                p4.setX(-2 * radius);
-                p1.setX(-0.5f * radius * (mCurrentTime - 0.2f) / 0.3f);
-                p3.setX(-0.5f * radius * (mCurrentTime - 0.2f) / 0.3f);
-                p2.setMc(mc + (mCurrentTime - 0.2f) * mc / 4 / 0.3f);
-                p4.setMc(mc + (mCurrentTime - 0.2f) * mc / 4 / 0.3f);
-            }
-        } else if (mCurrentTime > 0.5 && mCurrentTime <= 0.8) {
-            canvas.translate(startX + (mCurrentTime - 0.2f) * distance / 0.7f, startY);
-            if (toPos > currentPos) {
-                p1.setX(0.5f * radius + 0.5f * radius * (mCurrentTime - 0.5f) / 0.3f);
-                p3.setX(0.5f * radius + 0.5f * radius * (mCurrentTime - 0.5f) / 0.3f);
-                p2.setMc(1.25f * mc - 0.25f * mc * (mCurrentTime - 0.5f) / 0.3f);
-                p4.setMc(1.25f * mc - 0.25f * mc * (mCurrentTime - 0.5f) / 0.3f);
-            } else {
-                p1.setX(-0.5f * radius - 0.5f * radius * (mCurrentTime - 0.5f) / 0.3f);
-                p3.setX(-0.5f * radius - 0.5f * radius * (mCurrentTime - 0.5f) / 0.3f);
-                p2.setMc(1.25f * mc - 0.25f * mc * (mCurrentTime - 0.5f) / 0.3f);
-                p4.setMc(1.25f * mc - 0.25f * mc * (mCurrentTime - 0.5f) / 0.3f);
-            }
-        } else if (mCurrentTime > 0.8 && mCurrentTime <= 0.9) {
-            p2.setMc(mc);
-            p4.setMc(mc);
-            canvas.translate(startX + (mCurrentTime - 0.2f) * distance / 0.7f, startY);
-            if (toPos > currentPos) {
-                p4.setX(-radius + 1.6f * radius * (mCurrentTime - 0.8f) / 0.1f);
-            } else {
-                p2.setX(radius - 1.6f * radius * (mCurrentTime - 0.8f) / 0.1f);
-            }
-        } else if (mCurrentTime > 0.9 && mCurrentTime < 1) {
-            if (toPos > currentPos) {
-                p1.setX(radius);
-                p3.setX(radius);
-                canvas.translate(startX + distance, startY);
-                p4.setX(0.6f * radius - 0.6f * radius * (mCurrentTime - 0.9f) / 0.1f);
-            } else {
-                p1.setX(-radius);
-                p3.setX(-radius);
-                canvas.translate(startX + distance, startY);
-                p2.setX(-0.6f * radius + 0.6f * radius * (mCurrentTime - 0.9f) / 0.1f);
-            }
-        }
-        if (mCurrentTime == 1) {
-            lastCurrentTime = 0;
-            mPaint.setColor(endColor);
-            if (direction) {
-                p1.setX(radius);
-                p3.setX(radius);
-                canvas.translate(startX + distance, startY);
-                p4.setX(0);
-            } else {
-                p1.setX(-radius);
-                p3.setX(-radius);
-                canvas.translate(startX + distance, startY);
-                p2.setX(0);
-            }
-            currentPos = toPos;
-            resetP();
-            if (direction)
-                canvas.translate(radius, 0);
-            else
-                canvas.translate(-radius, 0);
-        }
-        mPath.moveTo(p1.x, p1.y);
-        mPath.cubicTo(p1.right.x, p1.right.y, p2.bottom.x, p2.bottom.y, p2.x, p2.y);
-        mPath.cubicTo(p2.top.x, p2.top.y, p3.right.x, p3.right.y, p3.x, p3.y);
-        mPath.cubicTo(p3.left.x, p3.left.y, p4.top.x, p4.top.y, p4.x, p4.y);
-        mPath.cubicTo(p4.bottom.x, p4.bottom.y, p1.left.x, p1.left.y, p1.x, p1.y);
-        if (mCurrentTime > 0 && mCurrentTime < 1)
-            mPaint.setColor(getCurrentColor(mCurrentTime, startColor, endColor));
-        canvas.drawPath(mPath, mPaint);
-        canvas.restore();
-        super.dispatchDraw(canvas);
+    clickPaint = new Paint();
+    clickPaint.setColor(clickColor);
+    clickPaint.setAntiAlias(true);
+    clickPaint.setStrokeWidth(radius / 2);
+
+    mpaint = new Paint();
+    startColor = roundColors[0];
+    mpaint.setColor(startColor);
+    mpaint.setStyle(Paint.Style.FILL_STYLE);
+    mpaint.setStrokeWidth(1);
+    mpaint.setAntiAlias(true);
+    mpaint.setBlendMode(LIGHTEN);
+    needInit = true;
+    setEstimateSizeListener(this);
+    setLayoutRefreshedListener(this);
+    setTouchEventListener(this);
+    addDrawTask(this);
+  }
+
+  private void init() {
+    tabNum = getChildCount();
+    final int width = getWidth();
+    final int height = getHeight();
+    div = (width - 2 * tabNum * radius) / (tabNum + 1);
+    startX = div + radius;
+    startY = height / 2;
+    if (currentPos == 0) {
+      radius = RCONST * ratio;
+      mcConst = (float) (CONST * ratio);
+      pt1 = new Ypoint(0, radius, mcConst);
+      pt3 = new Ypoint(0, -radius, mcConst);
+      pt2 = new Xpoint(radius, 0, mcConst);
+      pt4 = new Xpoint(-radius, 0, mcConst);
     }
+    needInit = false;
+  }
 
-    private double g2 = 1.41421;
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
-        int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
-        int modeWidth = MeasureSpec.getMode(widthMeasureSpec);
-        int modeHeight = MeasureSpec.getMode(heightMeasureSpec);
-        tabNum = getChildCount();
-        for (int i = 0; i < tabNum; i++) {
-            View child = getChildAt(i);
-            measureChild(child, widthMeasureSpec, heightMeasureSpec);
-        }
-        setMeasuredDimension(sizeWidth, sizeHeight);
+  private void startAniTo(final int currentPos, final int toPos) {
+    if (animator != null) {
+      animator.cancel();
     }
+    this.currentPos = currentPos;
+    this.toPos = toPos;
+    if (currentPos != toPos) {
+      startColor = roundColors[(this.currentPos) % 4];
+      endColor = roundColors[(toPos) % 4];
+      resetP();
+      isSwipe = false;
+      startX = div + radius + (this.currentPos) * (div + 2 * radius);
+      distance = (toPos - this.currentPos) * (2 * radius + div)
+              + (toPos > currentPos ? -radius : radius);
 
-    @Override
-    protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        tabNum = getChildCount();
-        for (int i = 0; i < tabNum; i++) {
-            View child = getChildAt(i);
-            child.layout((int) (div + (1 - scale * 1 / g2) * radius + i * (div + 2 * radius)), (int) (startY - scale * radius / g2), (int) (div + (1 + scale * 1 / g2) * radius + i * (div + 2 * radius)), (int) (startY + scale * radius / g2));
-        }
-    }
-
-    public void setViewPager(ViewPager viewPager) {
-        this.mViewPager = viewPager;
-        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-
-            }
-
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-                try {
-                    if (!animating) {
-                        updateDrop(position, positionOffset, positionOffsetPixels);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                if (onPageChangeListener != null) {
-                    onPageChangeListener.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                }
-
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                viewPagerState = state;
-                if (onPageChangeListener != null) {
-                    onPageChangeListener.onPageScrollStateChanged(state);
-                }
-            }
+      if (animator == null) {
+        animator = new AnimatorValue();
+        animator.setCurveType(Animator.CurveType.ACCELERATE_DECELERATE);
+        animator.setDuration(duration);
+        animator.setValueUpdateListener(new AnimatorValue.ValueUpdateListener() {
+          @Override
+          public void onUpdate(final AnimatorValue animatorValue, final  float value) {
+            currentTime = value;
+            invalidate();
+          }
         });
+        animator.setStateChangedListener(new Animator.StateChangedListener() {
+          @Override
+          public void onStart(final Animator animator) {
+            animating = true;
+            setTouchAble(false);
+          }
+
+          @Override
+          public void onStop(final Animator animator) {
+            //No operation.
+          }
+
+          @Override
+          public void onCancel(final Animator animator) {
+            goo();
+            animating = false;
+            setTouchAble(true);
+            currentTime = 1;
+            invalidate();
+          }
+
+          @Override
+          public void onEnd(final Animator animator) {
+            goo();
+            animating = false;
+            setTouchAble(true);
+          }
+
+          @Override
+          public void onPause(final Animator animator) {
+            //No operation.
+          }
+
+          @Override
+          public void onResume(final Animator animator) {
+            //No operation.
+          }
+        });
+      }
+      animator.start();
+      if (mviewPager != null) {
+        mviewPager.setCurrentPage(toPos);
+      }
+    }
+  }
+
+  @Override
+  public void onDraw(final Component component, final Canvas canvas) {
+    initDraw(canvas);
+    setCanvas(canvas);
+    drawCanvas(canvas);
+  }
+
+  /** Canvas onDraw.
+   *
+   * @param canvas canvas object
+   */
+  public void initDraw(final Canvas canvas) {
+    if (needInit) {
+      init();
+    }
+    canvas.save();
+    mpath.reset();
+    tabNum = getChildCount();
+    for (int i = 0; i < tabNum; i++) {
+      canvas.drawCircle(div + radius + i * (div + 2 * radius), startY, radius, paintCircle);
+    }
+    if (currentTime == 0) {
+      resetP();
+      if (!isSwipe) {
+        canvas.drawCircle(div + radius + (currentPos) * (div + 2 * radius), startY, 0,
+            clickPaint);
+      }
+      mpaint.setColor(startColor);
+      clickPaint.setStyle(Paint.Style.STROKE_STYLE);
+      canvas.translate(startX, startY);
+      if (toPos > currentPos) {
+        pt2.setX(radius);
+      } else {
+        pt4.setX(-radius);
+      }
+    }
+  }
+
+  /** Set cnanvas for different time stamp.
+   *
+   * @param canvas canvas object
+   */
+  public void setCanvas(final Canvas canvas) {
+    if (currentTime > 0 && currentTime <= 0.2) {
+      direction = toPos > currentPos;
+      if (animating) {
+        canvas.drawCircle(div + radius + (toPos) * (div + 2 * radius), startY,
+            radius * 1.0f * 5 * currentTime, clickPaint);
+      }
+      canvas.translate(startX, startY);
+      setCoordinates(canvas, TimeRange.TIME_0_2);
+    } else if (currentTime > 0.2 && currentTime <= 0.5) {
+      canvas.translate(startX + (currentTime - 0.2f) * distance / 0.7f, startY);
+      setCoordinates(canvas, TimeRange.TIME_2_5);
+    } else if (currentTime > 0.5 && currentTime <= 0.8) {
+      canvas.translate(startX + (currentTime - 0.2f) * distance / 0.7f, startY);
+      setCoordinates(canvas, TimeRange.TIME_5_8);
+    } else if (currentTime > 0.8 && currentTime <= 0.9) {
+      pt2.setMc(mcConst);
+      pt4.setMc(mcConst);
+      canvas.translate(startX + (currentTime - 0.2f) * distance / 0.7f, startY);
+      setCoordinates(canvas, TimeRange.TIME_8_9);
+    } else if (currentTime > 0.9 && currentTime < 1) {
+      setCoordinates(canvas, TimeRange.TIME_9_1);
+    }
+  }
+
+  private enum TimeRange {
+    TIME_0_2, TIME_2_5, TIME_5_8, TIME_8_9, TIME_9_1
+  }
+
+  /** Set coordinates for different time stamp.
+   *
+   * @param canvas canvas object
+   */
+  public void setCoordinates(final Canvas canvas, final TimeRange timeRange) {
+    if (toPos > currentPos) {
+      switch (timeRange) {
+        case TIME_0_2:
+          pt2.setX(radius + 2 * 5 * currentTime * radius / 2);
+          break;
+        case TIME_2_5:
+          pt2.setX(2 * radius);
+          pt1.setX(0.5f * radius * (currentTime - 0.2f) / 0.3f);
+          pt3.setX(0.5f * radius * (currentTime - 0.2f) / 0.3f);
+          pt2.setMc(mcConst + (currentTime - 0.2f) * mcConst / 4 / 0.3f);
+          pt4.setMc(mcConst + (currentTime - 0.2f) * mcConst / 4 / 0.3f);
+          break;
+        case TIME_5_8:
+          pt1.setX(0.5f * radius + 0.5f * radius * (currentTime - 0.5f) / 0.3f);
+          pt3.setX(0.5f * radius + 0.5f * radius * (currentTime - 0.5f) / 0.3f);
+          pt2.setMc(1.25f * mcConst - 0.25f * mcConst * (currentTime - 0.5f) / 0.3f);
+          pt4.setMc(1.25f * mcConst - 0.25f * mcConst * (currentTime - 0.5f) / 0.3f);
+          break;
+        case TIME_8_9:
+          pt4.setX(-radius + 1.6f * radius * (currentTime - 0.8f) / 0.1f);
+          break;
+        case TIME_9_1:
+          pt1.setX(radius);
+          pt3.setX(radius);
+          canvas.translate(startX + distance, startY);
+          pt4.setX(0.6f * radius - 0.6f * radius * (currentTime - 0.9f) / 0.1f);
+          break;
+        default:
+          break;
+      }
+    } else {
+      switch (timeRange) {
+        case TIME_0_2:
+          pt4.setX(-radius - 2 * 5 * currentTime * radius / 2);
+          break;
+        case TIME_2_5:
+          pt4.setX(-2 * radius);
+          pt1.setX(-0.5f * radius * (currentTime - 0.2f) / 0.3f);
+          pt3.setX(-0.5f * radius * (currentTime - 0.2f) / 0.3f);
+          pt2.setMc(mcConst + (currentTime - 0.2f) * mcConst / 4 / 0.3f);
+          pt4.setMc(mcConst + (currentTime - 0.2f) * mcConst / 4 / 0.3f);
+          break;
+        case TIME_5_8:
+          pt1.setX(-0.5f * radius - 0.5f * radius * (currentTime - 0.5f) / 0.3f);
+          pt3.setX(-0.5f * radius - 0.5f * radius * (currentTime - 0.5f) / 0.3f);
+          pt2.setMc(1.25f * mcConst - 0.25f * mcConst * (currentTime - 0.5f) / 0.3f);
+          pt4.setMc(1.25f * mcConst - 0.25f * mcConst * (currentTime - 0.5f) / 0.3f);
+          break;
+        case TIME_8_9:
+          pt2.setX(radius - 1.6f * radius * (currentTime - 0.8f) / 0.1f);
+          break;
+        case TIME_9_1:
+          pt1.setX(-radius);
+          pt3.setX(-radius);
+          canvas.translate(startX + distance, startY);
+          pt2.setX(-0.6f * radius + 0.6f * radius * (currentTime - 0.9f) / 0.1f);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  /** Draw canvas for set coordinates.
+   *
+   * @param canvas canvas object
+   */
+  public void drawCanvas(final Canvas canvas) {
+    if (currentTime == 1) {
+      lastCurrentTime = 0;
+      mpaint.setColor(endColor);
+      if (direction) {
+        pt1.setX(radius);
+        pt3.setX(radius);
+        canvas.translate(startX + distance, startY);
+        pt4.setX(0);
+      } else {
+        pt1.setX(-radius);
+        pt3.setX(-radius);
+        canvas.translate(startX + distance, startY);
+        pt2.setX(0);
+      }
+      currentPos = toPos;
+      resetP();
+      if (direction) {
+        canvas.translate(radius, 0);
+      } else {
+        canvas.translate(-radius, 0);
+      }
+    }
+    mpath.moveTo(pt1.xpt, pt1.ypt);
+    mpath.cubicTo(pt1.right.getXpt(), pt1.right.getYpt(), pt2.bottom.getXpt(), pt2.bottom.getYpt(),
+        pt2.xpt, pt2.ypt);
+    mpath.cubicTo(pt2.top.getXpt(), pt2.top.getYpt(), pt3.right.getXpt(), pt3.right.getYpt(),
+        pt3.xpt, pt3.ypt);
+    mpath.cubicTo(pt3.left.getXpt(), pt3.left.getYpt(), pt4.top.getXpt(), pt4.top.getYpt(),
+        pt4.xpt, pt4.ypt);
+    mpath.cubicTo(pt4.bottom.getXpt(), pt4.bottom.getYpt(), pt1.left.getXpt(), pt1.left.getYpt(),
+        pt1.xpt, pt1.ypt);
+    if (currentTime > 0 && currentTime < 1) {
+      mpaint.setColor(getCurrentColor(currentTime, startColor.getValue(), endColor.getValue()));
+    }
+    canvas.drawPath(mpath, mpaint);
+    canvas.restore();
+  }
+
+  @Override
+  public boolean onEstimateSize(final int widthEstConfig, final int heightEstConfig) {
+    // Notify child components in the container component to perform measurement.
+    measureChildren(widthEstConfig, heightEstConfig);
+    final int maxWidth = 0;
+    final int maxHeight = 0;
+    setEstimatedSize(
+            Component.EstimateSpec.getChildSizeWithMode(maxWidth, widthEstConfig, 0),
+            Component.EstimateSpec.getChildSizeWithMode(maxHeight, heightEstConfig, 0));
+
+    return true;
+  }
+
+  private void measureChildren(final int widthEstConfig, final int heightEstConfig) {
+    for (int idx = 0; idx < getChildCount(); idx++) {
+      final Component childView = getComponentAt(idx);
+      if (childView != null) {
+        measureChild(childView, widthEstConfig, heightEstConfig);
+      }
+    }
+  }
+
+  private void measureChild(final Component child, final int parentWidthSpec,
+                            final int parentHeightSpec) {
+    final ComponentContainer.LayoutConfig layoutConfig = child.getLayoutConfig();
+    final int childWidthSpec = EstimateSpec.getChildSizeWithMode(
+            layoutConfig.width, parentWidthSpec, EstimateSpec.UNCONSTRAINT);
+    final int childHeightSpec = EstimateSpec.getChildSizeWithMode(
+            layoutConfig.height, parentHeightSpec, EstimateSpec.UNCONSTRAINT);
+    child.estimateSize(childWidthSpec, childHeightSpec);
+  }
+
+  private void onLayout() {
+    tabNum = getChildCount();
+    for (int j = 0; j < tabNum; j++) {
+      final Component child = getComponentAt(j);
+      child.setComponentPosition(
+              (int) (div + (1 - scale * 1 / GCONST) * radius + j * (div + 2 * radius)),
+              (int) (startY - scale * radius / GCONST),
+              (int) (div + (1 + scale * 1 / GCONST) * radius + j * (div + 2 * radius)),
+              (int) (startY + scale * radius / GCONST));
+    }
+  }
+
+  @Override
+  public boolean onTouchEvent(final Component component, final TouchEvent touchEvent) {
+    boolean res = false;
+    if (touchEvent.getAction() == PRIMARY_POINT_DOWN) {
+      final float xval = touchEvent.getPointerScreenPosition(0).getX();
+      if (xval > div + 2 * radius && xval < (div + 2 * radius) * tabNum) {
+        final int mtoPos = (int) (xval / (div + 2 * radius));
+        if (mtoPos != currentPos && mtoPos <= tabNum) {
+          startAniTo(currentPos, mtoPos);
+        }
+      } else if (xval > div && xval < div + 2 * radius && currentPos != 0) {
+        startAniTo(currentPos, 0);
+      }
+      res = true;
+    }
+    return res;
+  }
+
+  @Override
+  public void onRefreshed(final Component component) {
+    onLayout();
+  }
+
+  /** Method to ignore touch events on page slider.
+   *
+   * @param touchAble isTouchable
+   */
+  private void setTouchAble(final boolean touchAble) {
+    if (mviewPager instanceof Touchable) {
+      ((Touchable) mviewPager).setTouchable(touchAble);
+    }
+  }
+
+  /** Method to set view pager and handle animation from when view page is moved.
+   *
+   * @param viewPager View pager object
+   */
+  public void setViewPager(final PageSlider viewPager) {
+    this.mviewPager = viewPager;
+    viewPager.addPageChangedListener(new PageSlider.PageChangedListener() {
+      @Override
+      public void onPageSliding(final int itemPos, final float itemPosOff,
+                                final int itemPosOffPix) {
+        try {
+          if (!animating) {
+            updateDrop(itemPos, itemPosOff, itemPosOffPix);
+          }
+        } catch (Exception e) {
+          if (LOGGER.isLoggable(Level.INFO)) {
+            HiLog.info(LABEL_LOG,  "Drop indicator - Page sliding error "
+                + e.getLocalizedMessage());
+          }
+        }
+        if (pgChangedListener != null) {
+          pgChangedListener.onPageSliding(itemPos, itemPosOff, itemPosOffPix);
+        }
+      }
+
+      @Override
+      public void onPageSlideStateChanged(final int state) {
+        if (pgChangedListener != null) {
+          pgChangedListener.onPageSlideStateChanged(state);
+        }
+      }
+
+      @Override
+      public void onPageChosen(final int itemPos) {
+        // No operation.
+      }
+    });
+
+  }
+
+  private void updateDrop(final int position, final float positionOffset,
+                          final int positionOffPix) {
+    if (animator != null) {
+      animator.cancel();
+    }
+    isSwipe = true;
+    if (positionOffPix > 0) {
+      direction = true;
+    } else if (positionOffPix < 0) {
+      direction = false;
     }
 
-    float lastCurrentTime = 0;
-
-    private void updateDrop(int position, float positionOffset, int positionOffsetPixels) {
-        if (animator != null)
-            animator.cancel();
-        if ((position + positionOffset) - currentPos > 0)
-            direction = true;
-        else if ((position + positionOffset) - currentPos < 0)
-            direction = false;
-        if (direction)
-            toPos = currentPos + 1;
-        else
-            toPos = currentPos - 1;
-        startColor = roundColors[(currentPos) % 4];
-        endColor = roundColors[(currentPos + (direction ? 1 : -1)) % 4];
-        startX = div + radius + (currentPos) * (div + 2 * radius);
-        distance = direction ? ((2 * radius + div) + (direction ? -radius : radius)) : (-(2 * radius + div) + (direction ? -radius : radius));
-        mCurrentTime = position + positionOffset - (int) (position + positionOffset);
-        if (!direction)
-            mCurrentTime = 1 - mCurrentTime;
-        if (Math.abs(lastCurrentTime - mCurrentTime) > 0.2) {
-            if (lastCurrentTime < 0.1)
-                mCurrentTime = 0;
-            else if (lastCurrentTime > 0.9)
-                mCurrentTime = 1;
-        }
-
-        lastCurrentTime = mCurrentTime;
-        invalidate();
+    if (direction) {
+      toPos = currentPos + 1;
+    } else {
+      toPos = currentPos - 1;
     }
 
-    class XPoint {
-        public float x;
-        public float y;
-        public float mc;
-        public PointF bottom;
-        public PointF top;
+    startColor = roundColors[(currentPos) % 4];
+    endColor = roundColors[(currentPos + (direction ? 1 : -1)) % 4];
+    startX = div + radius + (currentPos) * (div + 2 * radius);
+    distance = direction ? 2 * radius + div - radius :
+        -(2 * radius + div) + radius;
+    currentTime = position + positionOffset - (int) (position + positionOffset);
 
-        public XPoint(float x, float y, float mc) {
-            this.x = x;
-            this.y = y;
-            this.mc = mc;
-            if (bottom == null)
-                bottom = new PointF();
-            if (top == null)
-                top = new PointF();
-            bottom.y = y + mc;
-            top.y = y - mc;
-            bottom.x = x;
-            top.x = x;
-        }
-
-        public void setMc(float mc) {
-            this.mc = mc;
-            bottom.y = y + mc;
-            top.y = y - mc;
-        }
-
-        public void setY(float y) {
-            this.y = y;
-            bottom.y = y + mc;
-            top.y = y - mc;
-        }
-
-        public void setX(float x) {
-            this.x = x;
-            bottom.x = x;
-            top.x = x;
-        }
-
-        @Override
-        public String toString() {
-            return "XPoint{" +
-                    "x=" + x +
-                    ", y=" + y +
-                    ", mc=" + mc +
-                    ", bottom=" + bottom +
-                    ", top=" + top +
-                    '}';
-        }
+    if (Math.abs(lastCurrentTime - currentTime) > 0.2) {
+      if (lastCurrentTime < 0.1) {
+        currentTime = 0;
+      } else if (lastCurrentTime > 0.9) {
+        currentTime = 1;
+      }
     }
+    HiLog.info(LABEL_LOG, "updateDrop - mCurrentTime "+currentTime +" lastCurrentTime "+lastCurrentTime   );
+    HiLog.info(LABEL_LOG, "updateDrop startX "+startX +"distance "+distance +"direction "+direction  );
+    lastCurrentTime = currentTime;
+    invalidate();
+  }
 
-    class YPoint {
-        public float x;
-        public float y;
-        public float mc;
-        public PointF left;
-        public PointF right;
+  private void goo() {
+    currentPos = toPos;
+  }
 
-        public YPoint(float x, float y, float mc) {
-            this.x = x;
-            this.y = y;
-            this.mc = mc;
-            if (left == null)
-                left = new PointF();
-            if (right == null)
-                right = new PointF();
-            right.x = x + mc;
-            left.x = x - mc;
-            left.y = y;
-            right.y = y;
-        }
+  private void resetP() {
+    pt1.setY(radius);
+    pt1.setX(0);
+    pt1.setMc(mcConst);
 
-        public void setMc(float mc) {
-            this.mc = mc;
-            right.x = x + mc;
-            left.x = x - mc;
-        }
+    pt3.setY(-radius);
+    pt3.setX(0);
+    pt3.setMc(mcConst);
 
-        public void setX(float x) {
-            this.x = x;
-            right.x = x + mc;
-            left.x = x - mc;
-        }
+    pt2.setY(0);
+    pt2.setX(radius);
+    pt2.setMc(mcConst);
 
-        public void setY(float y) {
-            this.y = y;
-            left.y = y;
-            right.y = y;
-        }
+    pt4.setY(0);
+    pt4.setX(-radius);
+    pt4.setMc(mcConst);
+  }
 
-        public void setLeftX(float leftX) {
-            left.x = leftX;
-            x = (left.x + right.x) / 2;
-        }
-
-        @Override
-        public String toString() {
-            return "YPoint{" +
-                    "x=" + x +
-                    ", y=" + y +
-                    ", mc=" + mc +
-                    ", left=" + left +
-                    ", right=" + right +
-                    '}';
-        }
-    }
-
-    public int dip2px(Context mContext, float dpValue) {
-        final float scale = mContext.getResources().getDisplayMetrics().density;
-        return (int) (dpValue * scale + 0.5f);
-    }
-    float[][] f;
-    float[] result;
+  private Color getCurrentColor(final float percent, final int startColor, final int endColor) {
     int[] colors = new int[4];
-
-    public int getCurrentColor(float percent, int startColor, int endColor) {
-        colors[0] = startColor;
-        colors[1] = Color.GRAY;
-        colors[2] = Color.GRAY;
-        colors[3] = endColor;
-        for (int i = 0; i < colors.length; i++) {
-            f[i][0] = (colors[i] & 0xff0000) >> 16;
-            f[i][1] = (colors[i] & 0x00ff00) >> 8;
-            f[i][2] = (colors[i] & 0x0000ff);
-        }
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < f.length; j++) {
-                if (f.length == 1 || percent == j / (f.length - 1f)) {
-                    result = f[j];
-                } else {
-                    if (percent > j / (f.length - 1f) && percent < (j + 1f) / (f.length - 1)) {
-                        result[i] = f[j][i] - (f[j][i] - f[j + 1][i]) * (percent - j / (f.length - 1f)) * (f.length - 1f);
-                    }
-                }
-            }
-        }
-        return Color.rgb((int) result[0], (int) result[1], (int) result[2]);
+    colors[0] = startColor;
+    colors[1] = RgbPalette.GRAY.asArgbInt();
+    colors[2] = RgbPalette.GRAY.asArgbInt();
+    colors[3] = endColor;
+    for (int i = 0; i < colors.length; i++) {
+      colourHolder[i][0] = (colors[i] & 0xff0000) >> 16;
+      colourHolder[i][1] = (colors[i] & 0x00ff00) >> 8;
+      colourHolder[i][2] = colors[i] & 0x0000ff;
     }
+    for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < colourHolder.length; j++) {
+        if (colourHolder.length == 1 || percent == j / (colourHolder.length - 1f)) {
+          result = colourHolder[j];
+        } else {
+          if (percent > j / (colourHolder.length - 1f)
+                  && percent < (j + 1f) / (colourHolder.length - 1)) {
+            result[i] = colourHolder[j][i] - (colourHolder[j][i] - colourHolder[j + 1][i])
+                    * (percent - j / (colourHolder.length - 1f)) * (colourHolder.length - 1f);
+          }
+        }
+      }
+    }
+    return new Color(Color.rgb((int) result[0], (int) result[1], (int) result[2]));
+  }
+
+  /**Point holds two float coordinates.
+   */
+  public static class Xpoint {
+    private float xpt;
+    private float ypt;
+    private float mcXpt;
+    private PointF bottom;
+    private PointF top;
+
+    /** Constructor.
+     *
+     * @param xptVal x coordinate
+     * @param yptVal y coordinate
+     * @param mcVal mc constant
+     */
+    public Xpoint(final float xptVal, final float yptVal, final float mcVal) {
+      this.xpt = xptVal;
+      this.ypt = yptVal;
+      this.mcXpt = mcVal;
+      if (bottom == null) {
+        bottom = new PointF();
+      }
+      if (top == null) {
+        top = new PointF();
+      }
+      bottom.setYpt(xpt + mcXpt);
+      top.setYpt(ypt - mcXpt);
+      bottom.setXpt(xpt);
+      top.setXpt(xpt);
+    }
+
+    /** Method to set mc value.
+     *
+     * @param mcXpoint mc value for xpoint
+     */
+    public void setMc(final float mcXpoint) {
+      this.mcXpt = mcXpoint;
+      bottom.setYpt(ypt + mcXpt);
+      top.setYpt(ypt - mcXpt);
+    }
+
+    /** Method to set y coordinate.
+     *
+     * @param ypoint y coordinate
+     */
+    public void setY(final float ypoint) {
+      this.ypt = ypoint;
+      bottom.setYpt(ypt + mcXpt);
+      top.setYpt(ypt - mcXpt);
+    }
+
+    /** Method to set x coordinate.
+     *
+     * @param xpoint x coordinate
+     */
+    public void setX(final float xpoint) {
+      this.xpt = xpoint;
+      bottom.setXpt(xpoint);
+      top.setXpt(xpoint);
+    }
+
+    @Override
+    public String toString() {
+      return "XPoint{" + "x=" + xpt + ", y=" + ypt + ", mc=" + mcXpt
+              + ", bottom=" + bottom + ", top=" + top + '}';
+    }
+  }
+
+  /**Point holds two float coordinates.
+   */
+  public static class Ypoint {
+    private float xpt;
+    private float ypt;
+    private float mcYpt;
+    private PointF left;
+    private PointF right;
+
+    /** Constructor.
+     *
+     * @param xptVal x coordinate
+     * @param yptVal y coordinate
+     * @param mcVal mc constant
+     */
+    public Ypoint(final float xptVal, final float yptVal, final float mcVal) {
+      this.xpt = xptVal;
+      this.ypt = yptVal;
+      this.mcYpt = mcVal;
+      if (left == null) {
+        left = new PointF();
+      }
+      if (right == null) {
+        right = new PointF();
+      }
+      right.setXpt(xpt + mcYpt);
+      left.setXpt(xpt - mcYpt);
+      left.setYpt(ypt);
+      right.setYpt(ypt);
+    }
+
+    /** Method to set mc value.
+     *
+     * @param mcYpoint mc value for ypoint
+     */
+    public void setMc(final float mcYpoint) {
+      this.mcYpt = mcYpoint;
+      right.setXpt(xpt + mcYpt);
+      left.setXpt(xpt - mcYpt);
+    }
+
+    /** Method to set x coordinate.
+     *
+     * @param xpoint x coordinate
+     */
+    public void setX(final float xpoint) {
+      this.xpt = xpoint;
+      right.setXpt(xpt + mcYpt);
+      left.setXpt(xpt - mcYpt);
+    }
+
+    /** Method to set y coordinate.
+     *
+     * @param ypoint y coordinate
+     */
+    public void setY(final float ypoint) {
+      this.ypt = ypoint;
+      left.setYpt(ypt);
+      right.setYpt(ypt);
+    }
+
+    public void setLeftX(final float leftX) {
+      left.setXpt(leftX);
+      xpt = (left.getXpt() + right.getXpt()) / 2;
+    }
+
+    @Override
+    public String toString() {
+      return "YPoint{" + "x=" + xpt + ", y=" + ypt + ", mc=" + mcYpt
+              + ", left=" + left + ", right=" + right + '}';
+    }
+  }
 
 }
-
-

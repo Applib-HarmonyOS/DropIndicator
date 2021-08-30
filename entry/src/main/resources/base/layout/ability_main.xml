@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DependentLayout
+    xmlns:ohos="http://schemas.huawei.com/res/ohos"
+    xmlns:app="http://schemas.huawei.com/hap/res-auto"
+    ohos:height="match_parent"
+    ohos:width="match_parent"
+    ohos:alignment="horizontal_center"
+    ohos:background_element="#21293A">
+
+
+
+    <comulez.github.droplibrary.DropViewPager
+        ohos:id="$+id:viewpager"
+        ohos:width="match_parent"
+        ohos:height="200vp"
+        ohos:align_parent_top="true"
+        ohos:margin="15vp"
+        ohos:above="$id:circleIndicator"/>
+
+    <comulez.github.droplibrary.DropIndicator
+        ohos:id="$+id:circleIndicator"
+        ohos:width="match_parent"
+        ohos:height="50vp"
+        ohos:bottom_margin="10vp"
+        ohos:align_parent_bottom="true"
+        app:circle_color="#ffaaaaaa"
+        app:click_color="#ffffff"
+        app:color1="#FCC04D"
+        app:color2="#00C3E2"
+        app:color3="#FE626D"
+        app:color4="#966ACF"
+        app:duration="900"
+        app:radius="16vp"
+        app:scale="0.7">
+        <Image
+            ohos:height="match_content"
+            ohos:width="match_content"
+            ohos:scale_mode="stretch"
+            ohos:image_src="$media:msg">
+        </Image>
+        <Image
+            ohos:height="match_content"
+            ohos:width="match_content"
+            ohos:scale_mode="stretch"
+            ohos:image_src="$media:camera">
+
+        </Image>
+        <Image
+            ohos:height="match_content"
+            ohos:width="match_content"
+            ohos:scale_mode="stretch"
+            ohos:image_src="$media:video">
+
+        </Image>
+        <Image
+            ohos:height="match_content"
+            ohos:width="match_content"
+            ohos:scale_mode="stretch"
+            ohos:image_src="$media:notice">
+
+        </Image>
+
+    </comulez.github.droplibrary.DropIndicator>
+</DependentLayout>
