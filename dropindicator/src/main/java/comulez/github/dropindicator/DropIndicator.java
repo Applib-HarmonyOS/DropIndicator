@@ -580,8 +580,8 @@ public class DropIndicator extends ComponentContainer
     startX = div + radius + (currentPos) * (div + 2 * radius);
 //    distance = direction ? 2 * radius + div - radius :
 //            -(2 * radius + div) + radius;
-    distance = direction ? ((2 * radius + div) + (direction ? -radius : radius)) :
-        (-(2 * radius + div) + (direction ? -radius : radius));
+    distance = direction ? 2 * radius + div - radius :
+        -(2 * radius + div) + radius;
     currentTime = position + positionOffset - (int) (position + positionOffset);
 
     if (Math.abs(lastCurrentTime - currentTime) > 0.2) {
