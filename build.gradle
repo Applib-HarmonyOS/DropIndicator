@@ -44,15 +44,11 @@ allprojects {
         toolVersion = '8.43'
     }
     task checkstyle(type: Checkstyle) {
-        // rules.xml copy from:
-        // https://raw.githubusercontent.com/checkstyle/checkstyle/checkstyle-7.4/src/main/resources/google_checks.xml
-        // the version should be as same as plugin version
-        configFile new File(rootDir, "config/checkstyle/checkstyle_8_43.xml")
-        source 'src'
+        showViolations = true
+        configFile file("config/checkstyle.xml")
+        source 'entry/src/main/java'
+        source 'dropindicator/src/main/java'
         include '**/*.java'
-        exclude '**/gen/**'
-        exclude '**/R.java'
-        exclude '**/BuildConfig.java'
         classpath = files()
     }
 
