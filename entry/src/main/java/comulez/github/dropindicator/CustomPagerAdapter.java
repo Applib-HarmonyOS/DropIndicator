@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * Limitations under the License.
  */
-package comulez.github.dropindicatorsample;
+package comulez.github.dropindicator;
 
 import java.util.List;
 

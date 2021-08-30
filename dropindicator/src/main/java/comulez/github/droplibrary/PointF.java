@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * Limitations under the License.
  */
-package comulez.github.dropindicator;
+package comulez.github.droplibrary;
 
-/** Point holds two integer coordinates.
+/**
+ * Point holds two integer coordinates.
  */
 public class PointF {
   private float xpt;

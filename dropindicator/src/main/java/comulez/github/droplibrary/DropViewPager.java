@@ -1,4 +1,4 @@
-package comulez.github.dropindicator;
+package comulez.github.droplibrary;
 
 import ohos.agp.components.AttrSet;
 import ohos.agp.components.Component;
@@ -8,7 +8,8 @@ import ohos.app.Context;
 import ohos.hiviewdfx.HiLogLabel;
 import ohos.multimodalinput.event.TouchEvent;
 
-/** Created by Ulez on 2017/2/19.
+/**
+ * Created by Ulez on 2017/2/19.
  * Email：lcy1532110757@gmail.com.
  */
 public class DropViewPager extends PageSlider implements Component.TouchEventListener, Touchable {

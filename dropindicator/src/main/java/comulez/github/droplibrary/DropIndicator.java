@@ -1,4 +1,4 @@
-package comulez.github.dropindicator;
+package comulez.github.droplibrary;
 
 import static ohos.agp.render.BlendMode.LIGHTEN;
 import static ohos.multimodalinput.event.TouchEvent.PRIMARY_POINT_DOWN;
@@ -21,7 +21,8 @@ import ohos.hiviewdfx.HiLog;
 import ohos.hiviewdfx.HiLogLabel;
 import ohos.multimodalinput.event.TouchEvent;
 
-/**Created by Ulez on 2016/11/24.
+/**
+ * Created by Ulez on 2016/11/24.
  * Email：lcy1532110757@gmail.com.
  * Class handling the feature of adding drops and thier animation.
  */

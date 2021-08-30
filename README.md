@@ -2,7 +2,7 @@ DropIndicator
 =================
 Introduction
 ------------
-Android library which handles custom animation on indicator of PageSlider 
+HMOS library which handles custom animation on indicator of PageSlider 
 
 # Source
 
@@ -39,7 +39,7 @@ Usage
 
 I). Declare Custom indicator & Page slider in XML (see xml attributes below for customization):
 
-	<comulez.github.dropindicator.DropViewPager
+	<comulez.github.droplibrary.DropViewPager
             ohos:id="$+id:viewpager"
             ohos:width="match_parent"
             ohos:height="200vp"
@@ -47,7 +47,7 @@ I). Declare Custom indicator & Page slider in XML (see xml attributes below for 
             ohos:margin="15vp"
             ohos:above="$id:circleIndicator"/>
             
-	<comulez.github.dropindicator.DropIndicator
+	<comulez.github.droplibrary.DropIndicator
             ohos:id="$+id:circleIndicator"
             ohos:width="match_parent"
             ohos:height="50vp"
@@ -69,7 +69,7 @@ I). Declare Custom indicator & Page slider in XML (see xml attributes below for 
                 ohos:image_src="$media:msg">
             </Image>
             .....
-    </comulez.github.dropindicator.DropIndicator>
+    </comulez.github.droplibrary.DropIndicator>
 
 II). Usage in java 
             

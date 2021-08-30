@@ -9,7 +9,7 @@
 
 
 
-    <comulez.github.dropindicator.DropViewPager
+    <comulez.github.droplibrary.DropViewPager
         ohos:id="$+id:viewpager"
         ohos:width="match_parent"
         ohos:height="200vp"
@@ -17,7 +17,7 @@
         ohos:margin="15vp"
         ohos:above="$id:circleIndicator"/>
 
-    <comulez.github.dropindicator.DropIndicator
+    <comulez.github.droplibrary.DropIndicator
         ohos:id="$+id:circleIndicator"
         ohos:width="match_parent"
         ohos:height="50vp"
@@ -60,5 +60,5 @@
 
         </Image>
 
-    </comulez.github.dropindicator.DropIndicator>
+    </comulez.github.droplibrary.DropIndicator>
 </DependentLayout>

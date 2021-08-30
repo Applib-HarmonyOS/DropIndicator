@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * Limitations under the License.
  */
-package comulez.github.dropindicatorsample.slice;
+package comulez.github.dropindicator.slice;
 
-import comulez.github.dropindicator.DropIndicator;
-import comulez.github.dropindicator.ResourceTable;
-import comulez.github.dropindicatorsample.CustomPagerAdapter;
+import comulez.github.droplibrary.DropIndicator;
+import comulez.github.droplibrary.ResourceTable;
+import comulez.github.dropindicator.CustomPagerAdapter;
 import java.util.ArrayList;
 import java.util.List;
 

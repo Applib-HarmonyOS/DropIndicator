@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * Limitations under the License.
  */
-package comulez.github.dropindicatorsample;
+package comulez.github.droplibrary;
 
-import comulez.github.dropindicatorsample.slice.MainAbilitySlice;
-import ohos.aafwk.ability.Ability;
-import ohos.aafwk.content.Intent;
+import ohos.aafwk.ability.delegation.AbilityDelegatorRegistry;
+import org.junit.Test;
 
-public class MainAbility extends Ability {
-  @Override
-  public void onStart(final Intent intent) {
-    super.onStart(intent);
-    super.setMainRoute(MainAbilitySlice.class.getName());
-  }
+import static org.junit.Assert.assertEquals;
+
+public class ExampleOhosTest {
+    @Test
+    public void testBundleName() {
+        final String actualBundleName = AbilityDelegatorRegistry.getArguments().getTestBundleName();
+        assertEquals("Validate bundle name","comulez.github.dropindicator", actualBundleName);
+    }
 }

@@ -13,13 +13,16 @@
  * See the License for the specific language governing permissions and
  * Limitations under the License.
  */
-package comulez.github.dropindicatorsample;
+package comulez.github.dropindicator;
 
-import ohos.aafwk.ability.AbilityPackage;
+import comulez.github.dropindicator.slice.MainAbilitySlice;
+import ohos.aafwk.ability.Ability;
+import ohos.aafwk.content.Intent;
 
-public class MyApplication extends AbilityPackage {
+public class MainAbility extends Ability {
   @Override
-  public void onInitialize() {
-    super.onInitialize();
+  public void onStart(final Intent intent) {
+    super.onStart(intent);
+    super.setMainRoute(MainAbilitySlice.class.getName());
   }
 }

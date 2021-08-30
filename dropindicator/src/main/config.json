@@ -15,7 +15,7 @@
   "deviceConfig": {
   },
   "module": {
-    "package": "comulez.github.dropindicator",
+    "package": "comulez.github.droplibrary",
     "deviceType": [
       "phone"
     ],
