@@ -579,8 +579,6 @@ public class DropIndicator extends ComponentContainer
     startColor = roundColors[(currentPos) % 4];
     endColor = roundColors[(currentPos + (direction ? 1 : -1)) % 4];
     startX = div + radius + (currentPos) * (div + 2 * radius);
-//    distance = direction ? 2 * radius + div - radius :
-//            -(2 * radius + div) + radius;
     distance = direction ? 2 * radius + div - radius :
         -(2 * radius + div) + radius;
     currentTime = position + positionOffset - (int) (position + positionOffset);
