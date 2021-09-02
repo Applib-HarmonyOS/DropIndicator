@@ -16,10 +16,10 @@ The code in this repository was inspired from [Ulez/DropIndicator](https://githu
 Screenshot
 ------------
 
-![screenshot](/screenshots/drop1.PNG)
-![screenshot](/screenshots/drop2.PNG)
-![screenshot](/screenshots/drop3.PNG)
-![screenshot](/screenshots/drop4.PNG)
+![screenshot](/screenshots/drop1.jpg)
+![screenshot](/screenshots/drop2.jpg)
+![screenshot](/screenshots/drop3.jpg)
+![screenshot](/screenshots/drop4.jpg)
 
 Installation
 ------------
