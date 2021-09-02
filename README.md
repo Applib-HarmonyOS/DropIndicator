@@ -47,8 +47,8 @@ III) For using DropIndicator from a remote repository in separate application, a
  below dependencies in entry/build.gradle file.
 ```
 dependencies {
-           implementation 'dev.applibgroup:dropindicator:1.0.0'
-           testCompile 'junit:junit:4.12'
+        implementation 'dev.applibgroup:dropindicator:1.0.0'
+        testCompile 'junit:junit:4.12'
 }
 ```
 
