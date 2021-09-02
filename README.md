@@ -1,19 +1,29 @@
 DropIndicator
 =================
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=applibgroup_DropIndicator&metric=alert_status)](https://sonarcloud.io/dashboard?id=applibgroup_DropIndicator)
+[![.github/workflows/main.yml](https://github.com/applibgroup/DropIndicator/actions/workflows/main.yml/badge.svg)](https://github.com/applibgroup/DropIndicator/actions/workflows/main.yml)
+
 Introduction
 ------------
 HMOS library which handles custom animation on indicator of PageSlider 
 
-# Source
+Source
+------------
 
 The code in this repository was inspired from [Ulez/DropIndicator](https://github.com/Ulez/DropIndicator). We are very
  thankful to Ulez.
 
-# Demo
+Screenshot
+------------
 
-<img src="https://github.com/Ulez/DropIndicator/blob/master/screenshots/view.gif" width = "300" height = "507.6" align=center />
+<img src=/screenshots/drop1.jpg width = "200" height = "470" align=center /> <img src
+=/screenshots/drop2.jpg width = "200" height = "470" align=center />
+<img src=/screenshots/drop3.jpg width = "200" height = "470" align=center /> <img src
+=/screenshots/drop4.jpg width = "200" height = "470" align=center />
 
-## Installation
+
+Installation
+------------
 
 In order to use the library, add the following line to your **root** gradle file:
 
@@ -31,6 +41,14 @@ II) For using DropIndicator in separate application using har file, add the har 
 dependencies {
         implementation fileTree(dir: 'libs', include: ['*.har'])
         testImplementation 'junit:junit:4.12'
+}
+```
+III) For using DropIndicator from a remote repository in separate application, add the
+ below dependencies in entry/build.gradle file.
+```
+dependencies {
+        implementation 'dev.applibgroup:dropindicator:1.0.0'
+        testCompile 'junit:junit:4.12'
 }
 ```
 
