@@ -16,15 +16,7 @@ The code in this repository was inspired from [Ulez/DropIndicator](https://githu
 Screenshot
 ------------
 
-![Continuous, Discrete, Custom Java layout](/screenshots/drop1.jpg)
- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-![Continuous, Discrete, Custom Java layout](/screenshots/drop2.jpg)
- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-![Continuous, Discrete, Custom Java layout](/screenshots/drop3.jpg)
- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-![Continuous, Discrete, Custom Java layout](/screenshots/drop4.jpg)
- &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    
+<img src=/screenshots/drop1.jpg width = "300" height = "507.6" align=center />
 ![screenshot](/screenshots/drop1.jpg)
 ![screenshot](/screenshots/drop2.jpg)
 ![screenshot](/screenshots/drop3.jpg)
