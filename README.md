@@ -16,10 +16,10 @@ The code in this repository was inspired from [Ulez/DropIndicator](https://githu
 Screenshot
 ------------
 
-<img src=/screenshots/drop1.jpg width = "220" height = "480" align=center /> <img src
-=/screenshots/drop2.jpg width = "220" height = "480" align=center />
-<img src=/screenshots/drop3.jpg width = "220" height = "480" align=center /><img src
-=/screenshots/drop4.jpg width = "220" height = "480" align=center />
+<img src=/screenshots/drop1.jpg width = "200" height = "480" align=center /> <img src
+=/screenshots/drop2.jpg width = "200" height = "480" align=center />
+<img src=/screenshots/drop3.jpg width = "200" height = "480" align=center /><img src
+=/screenshots/drop4.jpg width = "200" height = "480" align=center />
 
 
 Installation
